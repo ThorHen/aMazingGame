@@ -1,82 +1,121 @@
 package server;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import javafx.scene.image.ImageView;
-
 public class ClientInputThread extends Thread {
 	
-	private ArrayList<Socket> players;
+	private Socket connectionSocket;
+	private ArrayList<ClientInputThread> clients;
 	private Player player = new Player("Test", 0, 0, "up");
+	private ServerMap serverMap;
 
-	public ClientInputThread(ArrayList<Socket> players) {
+	public ClientInputThread(Socket connectionSocket, ArrayList<ClientInputThread> clients, ServerMap serverMap) {
 		super();
-		this.players = players;
+		this.clients = clients;
+		this.serverMap = serverMap;
+		this.connectionSocket = connectionSocket;
 	}
 	
 	@Override
 	public void run() {
-		//TODO send player info as String?
-		//Generate board
-		
-		boolean gameFinished = false;
-		
-		while(!gameFinished) {
-			//send other player's position
-			//update points
+		try {
+			
+			//BufferedReader that connects to the socket of this thread
+			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+			
+			//DataOutPutStream that sends the initial setup to client
+			DataOutputStream initClientOutput = new DataOutputStream(connectionSocket.getOutputStream());
+			
+			//TODO implement String username = inFromClient.readLine() -> client's wanted userName
+			//player = new Player("userName", 0, 0, "up")
+			
+			//send board info as String to client
+			for(String s :serverMap.getBoard()) {
+				initClientOutput.writeBytes(s);
+			}
+			
+
+			//send already connected players' info to client
+			for(ClientInputThread ct : clients) {
+				initClientOutput.writeBytes(ct.getPlayer().getStringStream());
+			}
+			
+			boolean gameFinished = false;
+			
+			while(!gameFinished) {
+				//Splits the input from the client in a String[] and parses it as needed format
+				String[] formattedInput = inFromClient.readLine().split(" "); //[int, int, String]
+				int deltaX = Integer.parseInt(formattedInput[0]);
+				int deltaY = Integer.parseInt(formattedInput[1]);
+				String direction = formattedInput[2];
+				
+				//Update the player of this thread
+				playerMoved(deltaX, deltaY, direction);
+				
+				//Notify other clients of updated player
+				for(ClientInputThread ct : clients) {
+					DataOutputStream outToCT = new DataOutputStream(ct.getConnectionSocket().getOutputStream());
+					outToCT.writeBytes(player.getStringStream());
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
-	public synchronized void playerMoved(Player p, int delta_x, int delta_y, String direction) {
-		p.direction = direction;
-		int x = p.getXpos(), y = p.getYpos();
+	/**
+	 * Method that mutates the player's values based on input from client
+	 * @param delta_x the amount the player is to be moved in the horizontal direction
+	 * @param delta_y the amount the player is to be moved in the vertical direction
+	 * @param direction the way the player should be facing after being moved
+	 */
+	public synchronized void playerMoved(int delta_x, int delta_y, String direction) {
+		player.direction = direction;
+		int x = player.getXpos(), y = player.getYpos();
 
-		if (board[y + delta_y].charAt(x + delta_x) == 'w') {
-			p.addPoints(-1);
+		if (serverMap.getBoard()[y + delta_y].charAt(x + delta_x) == 'w') {
+			player.addPoints(-1);
 		} else {
 			Player p = getPlayerAt(x + delta_x, y + delta_y);
 			if (p != null) {
-				p.addPoints(10);
+				player.addPoints(10);
 				p.addPoints(-10);
 			} else {
-				p.addPoints(1);
+				player.addPoints(1);
 
-				fields[x][y].setGraphic(new ImageView(image_floor));
 				x += delta_x;
 				y += delta_y;
 
-				p.setXpos(x);
-				p.setYpos(y);
+				player.setXpos(x);
+				player.setYpos(y);
 			}
 		}
-		
-		if (direction.equals("right")) {
-			fields[x][y].setGraphic(new ImageView(hero_right));
-		}
-		if (direction.equals("left")) {
-			fields[x][y].setGraphic(new ImageView(hero_left));
-		}
-		if (direction.equals("up")) {
-			fields[x][y].setGraphic(new ImageView(hero_up));
-		}
-		if (direction.equals("down")) {
-			fields[x][y].setGraphic(new ImageView(hero_down));
-		}
-		
-		scoreList.setText(getScoreList());
 	}
 	
+	//TODO move this method to client side
 	public String getScoreList() {
 		StringBuffer b = new StringBuffer(100);
-		for (Player p : players) {
+		for (ClientInputThread ct : clients) {
+			Player p = ct.getPlayer();
 			b.append(p + "\r\n");
 		}
 		return b.toString();
 	}
-
+	
+	/**
+	 * Method that returns a player at a given coordinate
+	 * @param x 
+	 * @param y
+	 * @return the player at a given coordinate, if one exists, otherwise null
+	 */
 	public Player getPlayerAt(int x, int y) {
-		for (Player p : players) {
+		for (ClientInputThread ct : clients) {
+			Player p = ct.getPlayer();
 			if (p.getXpos() == x && p.getYpos() == y) {
 				return p;
 			}
@@ -84,4 +123,13 @@ public class ClientInputThread extends Thread {
 		return null;
 	}
 
+	//Method that returns the player object of this thread;
+	public Player getPlayer() {
+		return player;
+	}
+	
+	//Return the connectionSocket of this thread. For use in communication with other threads only
+	public Socket getConnectionSocket() {
+		return connectionSocket;
+	}
 }

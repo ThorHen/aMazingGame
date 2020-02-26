@@ -39,4 +39,12 @@ public class Player {
 	public String toString() {
 		return name+":   "+point;
 	}
+	
+	/**
+	 * Return all of the player object's fields as a string. For use in client communication only
+	 * @return String object containing all of the fields
+	 */
+	public String getStringStream() {
+		return name + " " + xpos + " " + ypos + " " + point + " " + direction;
+	}
 }
