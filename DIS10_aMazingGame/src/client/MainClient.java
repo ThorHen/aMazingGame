@@ -28,7 +28,16 @@ public class MainClient extends Application {
 
 	private Label[][] fields;
 	private TextArea scoreList;
+	
+	//INIT START
+	
+	//TODO create socket with IP and Port
+	
+	//TODO choose userName and send to server
 
+	
+	//TODO replace with board from server
+	
 	private String[] board = { // 20x20
 			"wwwwwwwwwwwwwwwwwwww", 
 			"w        ww        w", 
@@ -50,6 +59,8 @@ public class MainClient extends Application {
 			"w w      ww w     ww", 
 			"w   w   ww  w      w", 
 			"wwwwwwwwwwwwwwwwwwww" };
+	//TODO create outputstream based on keyboard input
+	//INIT END
 
 	// -------------------------------------------
 	// | Maze: (0,0) | Score: (1,0) |
@@ -84,6 +95,7 @@ public class MainClient extends Application {
 			hero_up = new Image(getClass().getResourceAsStream("Image/heroUp.png"), size, size, false, false);
 			hero_down = new Image(getClass().getResourceAsStream("Image/heroDown.png"), size, size, false, false);
 
+			//TODO make flexible so it responds to server supplied board
 			fields = new Label[20][20];
 			for (int j = 0; j < 20; j++) {
 				for (int i = 0; i < 20; i++) {

@@ -146,6 +146,7 @@ public class Main extends Application {
 		}
 	}
 
+	//TODO Change to output to server and based on response update fields
 	public void playerMoved(int delta_x, int delta_y, String direction) {
 		me.direction = direction;
 		int x = me.getXpos(), y = me.getYpos();

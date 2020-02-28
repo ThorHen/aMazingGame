@@ -12,7 +12,7 @@ public class TCPServer {
     public static void main(String[] args) throws Exception {
 
         ServerSocket welcomSocket = new ServerSocket(6789);
-        
+     
         //ArrayList of connected clients
         ArrayList<ClientInputThread> clients = new ArrayList<>();
         
