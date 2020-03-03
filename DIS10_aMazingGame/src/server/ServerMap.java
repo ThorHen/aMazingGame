@@ -33,8 +33,7 @@ public class ServerMap {
 		return board;
 	}
 	
-	//TODO implement at some point
-	public int[] getDimensions() {
-		return null;
+	public String getDimensions() {
+		return board[0].length() + " " + board.length;
 	}
 }

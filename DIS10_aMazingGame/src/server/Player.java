@@ -7,14 +7,17 @@ public class Player {
 	int point;
 	String direction;
 
-	public Player(String name, int xpos, int ypos, String direction) {
+	public Player(String name, int xpos, int ypos, int point, String direction) {
 		this.name = name;
 		this.xpos = xpos;
 		this.ypos = ypos;
+		this.point = point;
 		this.direction = direction;
-		this.point = 0;
 	}
-
+	
+	public String getName() {
+		return name;
+	}
 	public int getXpos() {
 		return xpos;
 	}
@@ -45,6 +48,6 @@ public class Player {
 	 * @return String object containing all of the fields
 	 */
 	public String getStringStream() {
-		return name + " " + xpos + " " + ypos + " " + point + " " + direction;
+		return name + " " + xpos + " " + ypos + " " + point + " " + direction + " \n";
 	}
 }

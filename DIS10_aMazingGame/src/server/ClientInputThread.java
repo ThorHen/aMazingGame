@@ -11,7 +11,7 @@ public class ClientInputThread extends Thread {
 	
 	private Socket connectionSocket;
 	private ArrayList<ClientInputThread> clients;
-	private Player player = new Player("Test", 0, 0, "up");
+	private Player player;
 	private ServerMap serverMap;
 
 	public ClientInputThread(Socket connectionSocket, ArrayList<ClientInputThread> clients, ServerMap serverMap) {
@@ -31,25 +31,34 @@ public class ClientInputThread extends Thread {
 			//DataOutPutStream that sends the initial setup to client
 			DataOutputStream initClientOutput = new DataOutputStream(connectionSocket.getOutputStream());
 			
-			//TODO implement String username = inFromClient.readLine() -> client's wanted userName
-			//player = new Player("userName", 0, 0, "up")
+			String userName = inFromClient.readLine();
+			player = new Player(userName, 1, 1, 0, "up");
 			
+			//TODO implement array of valid starting places for a given map. Property of ServerMap class?
+			//Check if player or wall already there
+			
+			
+			//Send dimensions of board to client
+			initClientOutput.writeBytes(serverMap.getDimensions() + " \n");
 			//send board info as String to client
 			for(String s :serverMap.getBoard()) {
-				initClientOutput.writeBytes(s);
+				initClientOutput.writeBytes(s + "\n");
 			}
 			
-
+			//TODO test for ReadThread BufferedReader ready?
+			
 			//send already connected players' info to client
 			for(ClientInputThread ct : clients) {
-				initClientOutput.writeBytes(ct.getPlayer().getStringStream());
+				DataOutputStream outToCT = new DataOutputStream(ct.getConnectionSocket().getOutputStream());
+				outToCT.writeBytes("SPAWN " + player.getStringStream());
 			}
 			
 			boolean gameFinished = false;
 			
 			while(!gameFinished) {
 				//Splits the input from the client in a String[] and parses it as needed format
-				String[] formattedInput = inFromClient.readLine().split(" "); //[int, int, String]
+				String[] formattedInput = inFromClient.readLine().split(" "); //int, int, String
+				//The lateral requested movement of the player.
 				int deltaX = Integer.parseInt(formattedInput[0]);
 				int deltaY = Integer.parseInt(formattedInput[1]);
 				String direction = formattedInput[2];
@@ -60,7 +69,7 @@ public class ClientInputThread extends Thread {
 				//Notify other clients of updated player
 				for(ClientInputThread ct : clients) {
 					DataOutputStream outToCT = new DataOutputStream(ct.getConnectionSocket().getOutputStream());
-					outToCT.writeBytes(player.getStringStream());
+					outToCT.writeBytes("MOVE " + player.getStringStream());
 				}
 			}
 		} catch (IOException e) {
@@ -75,6 +84,7 @@ public class ClientInputThread extends Thread {
 	 * @param direction the way the player should be facing after being moved
 	 */
 	public synchronized void playerMoved(int delta_x, int delta_y, String direction) {
+		System.out.println("Modtaget input i playerMoved()");
 		player.direction = direction;
 		int x = player.getXpos(), y = player.getYpos();
 
@@ -95,16 +105,6 @@ public class ClientInputThread extends Thread {
 				player.setYpos(y);
 			}
 		}
-	}
-	
-	//TODO move this method to client side
-	public String getScoreList() {
-		StringBuffer b = new StringBuffer(100);
-		for (ClientInputThread ct : clients) {
-			Player p = ct.getPlayer();
-			b.append(p + "\r\n");
-		}
-		return b.toString();
 	}
 	
 	/**
