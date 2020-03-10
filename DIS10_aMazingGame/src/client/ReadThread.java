@@ -52,7 +52,7 @@ public class ReadThread extends Thread {
 					finished = true;
 				} else {
 					String[] playerChange = inFromServer.readLine().split(" ");
-					System.out.println(Arrays.toString(playerChange));
+					//System.out.println(Arrays.toString(playerChange));
 
 					if (playerChange[0].equals("SPAWN")) {
 						// Spawn changes

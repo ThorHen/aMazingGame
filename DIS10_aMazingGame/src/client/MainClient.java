@@ -139,7 +139,7 @@ public class MainClient extends Application {
 				case UP:
 //					playerMoved(0, -1, "up");
 					try {
-						System.out.println("Modtaget input i client");
+						//System.out.println("Modtaget input i client");
 						outToServer.writeBytes("0 -1 up \n");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
